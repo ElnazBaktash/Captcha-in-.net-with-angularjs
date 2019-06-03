@@ -1,0 +1,8 @@
+<div class="captcha" ng-c>
+    <label for="imgcpatcha"></label>
+    <button tabindex="-1" type="button" id="refreshCaptcha" class="btn btn-dark-purple btn-block" ng-click="refreshCaptcha()">
+        <i class="fa fa-repeat"></i>
+    </button>
+    <img alt="Captcha" id="imgcpatcha" src="@Url.Action("Captcha", "Account")" />
+    <input name="captcha" id="captcha" type="text" required placeholder="?? ??????">
+</div>

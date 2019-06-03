@@ -1,0 +1,71 @@
+    [System.Web.Mvc.AllowAnonymous]
+        public ActionResult Captcha(bool? noisy = true)
+        {
+            var captchaType = (CaptchaType) Convert.ToInt32(ConfigurationManager.AppSettings["captchaType"]);
+
+            int value = 0;
+            string content = String.Empty;
+            var rand = new Random((int)DateTime.Now.Ticks);
+
+            //generate new question
+            if (captchaType == CaptchaType.Simple)
+            {
+                value = rand.Next(100000, 999999);
+                content = value.ToString();
+            }
+            else if (captchaType == CaptchaType.Sum)
+            {
+                int a = rand.Next(10, 99);
+                int b = rand.Next(1, 9);
+                value = a + b;
+                content = a + " + " + b;
+            }
+            else if (captchaType == CaptchaType.Multiplication)
+            {
+                int a = rand.Next(1, 9);
+                int b = rand.Next(1, 9);
+                value = a * b;
+                content = a + " × " + b;
+            }
+
+            //store answer
+            Session["Captcha"] = value;
+
+            //image stream
+            FileContentResult img = null;
+
+            using (var mem = new MemoryStream())
+            using (var bmp = new Bitmap(130, 30))
+            using (var gfx = Graphics.FromImage(bmp))
+            {
+                gfx.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+                gfx.SmoothingMode = SmoothingMode.AntiAlias;
+                gfx.FillRectangle(Brushes.White, new Rectangle(0, 0, bmp.Width, bmp.Height));
+
+                //add noise
+                if (noisy == true)
+                {
+                    int i, r, x, y;
+                    var pen = new Pen(Color.Yellow);
+                    for (i = 1; i < 10; i++)
+                    {
+                        pen.Color = Color.FromArgb((rand.Next(10, 255)), (rand.Next(10, 255)), (rand.Next(10, 255)));
+
+                        r = rand.Next(0, (200 / 3));
+                        x = rand.Next(0, 200);
+                        y = rand.Next(0, 30);
+
+                        gfx.DrawEllipse(pen, x - r, y - r, r, r);
+                    }
+                }
+
+                //add question
+                gfx.DrawString(content, new Font("Tahoma", 18), Brushes.DarkSlateGray, 5, 0);
+
+                //render as Jpeg
+                bmp.Save(mem, System.Drawing.Imaging.ImageFormat.Jpeg);
+                img = this.File(mem.GetBuffer(), "image/Jpeg");
+            }
+
+            return img;
+        }
